@@ -1,212 +1,64 @@
+import streamlit as st
 import pandas as pd
-import dash
-from dash import html,Input,Output,dcc
-import plotly.graph_objs as go
+import plotly.graph_objects as go
 import plotly.express as px
 
+# Load data
+p_data = pd.read_csv("state_wise_daily data file IHHPET.csv")
 
-external_stylesheets = [
-    {
-        "href":"https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css",
-        "rel":"stylesheet",
-        "integrity":"sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC",
-        "crossorigin":"anonymous"
-    }
-]
-p_data=pd.read_csv("state_wise_daily data file IHHPET.csv")
-total_cases=p_data['Status'].shape[0]
-active=p_data[p_data['Status']=='Confirmed'].shape[0]
-recovered=p_data[p_data['Status']=='Recovered'].shape[0]
-death=p_data[p_data['Status']=='Deceased'].shape[0]
+# Calculate stats
+total_cases = p_data['Status'].shape[0]
+active = p_data[p_data['Status'] == 'Confirmed'].shape[0]
+recovered = p_data[p_data['Status'] == 'Recovered'].shape[0]
+death = p_data[p_data['Status'] == 'Deceased'].shape[0]
 
-option1 = [
+# UI
+st.title("🦠 Covid Dashboard")
 
-    {'label':'All','value':'All'},
-    {'label': 'Hospitalized', 'value': 'Hospitalized'},
-    {'label': 'Recovered', 'value': 'Recovered'},
-    {'label': 'Deceased', 'value': 'Deceased'}
+# Top stats
+col1, col2, col3, col4 = st.columns(4)
+col1.metric("Total Cases", total_cases)
+col2.metric("Active Cases", active)
+col3.metric("Recovered", recovered)
+col4.metric("Total Deaths", death)
 
-]
+# Dropdown for first graph
+st.subheader("🛠️ Commodity Distribution")
+option2 = ['All', 'Mask', 'Sanitizer', 'Oxygen']
+type = st.selectbox("Select Commodity", option2)
 
-option2 = [
+if type == 'All':
+    fig = go.Figure(go.Scatter(x=p_data['Status'], y=p_data['Total'], mode='lines'))
+elif type == 'Mask':
+    fig = go.Figure(go.Scatter(x=p_data['Status'], y=p_data['Mask'], mode='lines'))
+elif type == 'Sanitizer':
+    fig = go.Figure(go.Scatter(x=p_data['Status'], y=p_data['Sanitizer'], mode='lines'))
+else:
+    fig = go.Figure(go.Scatter(x=p_data['Status'], y=p_data['Oxygen'], mode='lines'))
 
-    {'label':'All','value':'All'},
-    {'label': 'Mask', 'value': 'Mask'},
-    {'label': 'Sanitizer', 'value': 'Sanitizer'},
-    {'label': 'Oxygen', 'value': 'Oxygen'}
+fig.update_layout(title="Commodity Total Count", plot_bgcolor='pink')
+st.plotly_chart(fig)
 
-]
+# Pie chart for zones
+st.subheader("📊 Zone-wise Distribution")
+option3 = ['Status', 'Red Zone', 'Blue Zone', 'Green Zone', 'Orange Zone']
+value = st.selectbox("Select Zone", option3)
+fig2 = px.pie(data_frame=p_data, names=value, hole=0.5)
+st.plotly_chart(fig2)
 
-option3 = [
-    {'label': 'All', 'value': 'Status'},
-    {'label':'Red Zone','value':'Red Zone'},
-    {'label': 'Blue Zone', 'value': 'Blue Zone'},
-    {'label': 'Green Zone', 'value': 'Green Zone'},
-    {'label': 'Orange Zone', 'value': 'Orange Zone'}
+# Bar chart for state-wise data
+st.subheader("📈 State-wise Stats")
+option1 = ['All', 'Hospitalized', 'Recovered', 'Deceased']
+category = st.selectbox("Select Category", option1)
 
-]
+if category == 'All':
+    fig3 = go.Figure(go.Bar(x=p_data['State'], y=p_data['Total']))
+elif category == 'Hospitalized':
+    fig3 = go.Figure(go.Bar(x=p_data['State'], y=p_data['Hospitalized']))
+elif category == 'Recovered':
+    fig3 = go.Figure(go.Bar(x=p_data['State'], y=p_data['Recovered']))
+else:
+    fig3 = go.Figure(go.Bar(x=p_data['State'], y=p_data['Deceased']))
 
-app=dash.Dash(__name__,external_stylesheets=external_stylesheets)
-
-app.layout = html.Div([
-
-                html.H1('Covid DashBoard',style={'textAlign':'center','color':'red'}),
-
-                html.Div([
-
-                        html.Div([
-
-                                    html.Div([
-                                        html.Div([
-                                             html.H1("Total Cases",style={'textAlign':'center','color':'#fff'}),
-                                             html.H1(total_cases,style={'textAlign':'center','color':'#fff'}),
-                                         ],className='card-body')
-                                     ],className='card bg-danger' ),
-
-                        ],className='col-md-3'),
-
-                        html.Div([
-                                     html.Div([
-                                        html.Div([
-                                             html.H1("Active Cases",style={'textAlign':'center','color':'#fff'}),
-                                             html.H1(active,style={'textAlign':'center','color':'#fff'}),
-                                         ],className='card-body')
-                                     ],className='card bg-info' ),
-                        ],className='col-md-3'),
-
-                        html.Div([
-
-                                     html.Div([
-                                        html.Div([
-                                             html.H1("Recov. Cases",style={'textAlign':'center','color':'#fff'}),
-                                             html.H1(recovered,style={'textAlign':'center','color':'#fff'}),
-                                         ],className='card-body')
-                                     ],className='card bg-warning' ),
-
-                        ],className='col-md-3'),
-                        html.Div([
-
-                                     html.Div([
-                                        html.Div([
-                                             html.H1("Total Death",style={'textAlign':'center','color':'#fff'}),
-                                             html.H1(death,style={'textAlign':'center','color':'#fff'}),
-                                         ],className='card-body')
-                                     ],className='card bg-success' ),
-
-                        ],className='col-md-3')
-
-                ],className='row'),
-
-
-                html.Div([
-
-                    html.Div([
-                        html.Div([
-                            html.Div([
-                                dcc.Dropdown(id='plot-graph',options=option2,value='All'),
-                                dcc.Graph(id='graph')
-                            ],className='card-body'),
-                        ],className='card'),
-                    ],className='col-md-6'),
-
-
-                    html.Div([
-                        html.Div([
-                            html.Div([
-                                dcc.Dropdown(id='my_drop',options=option3,value='Status'),
-                                dcc.Graph(id='the_graph')
-                            ],className='card-body'),
-                        ],className='card'),
-                    ],className='col-md-6'),
-
-
-                ],className='row'),
-
-
-                html.Div([
-
-                    html.Div([
-                        html.Div([
-                            html.Div([
-                                dcc.Dropdown(id='picker',options=option1,value='All',
-                                             clearable=False,placeholder='Select a Category',
-                                             multi=False),   #style={'display':'inline-block'}),
-                                dcc.Graph(id='bar')
-                            ],className='card-body'),
-                        ],className='card'),
-                    ],className='col-md-12'),
-
-
-                ],className='row'),
-
-
-            ],className="Container")
-
-
-@app.callback(Output('graph','figure'),[Input('plot-graph','value')])
-def update_graph(type):
-     if type=='All':
-         return {
-             'data': [go.Line(x=p_data['Status'],y=p_data['Total'])],
-             'layout': go.Layout(title='Comodities Total Count', plot_bgcolor = 'pink')
-         }
-
-     if type == 'Mask':
-         return {
-             'data': [go.Line(x=p_data['Status'], y=p_data['Mask'])],
-             'layout': go.Layout(title='Comodities Total Count', plot_bgcolor='pink')
-         }
-
-     if type == 'Sanitizer':
-         return {
-             'data': [go.Line(x=p_data['Status'], y=p_data['Sanitizer'])],
-             'layout': go.Layout(title='Comodities Total Count', plot_bgcolor='pink')
-         }
-
-     if type == 'Oxygen':
-         return {
-             'data': [go.Line(x=p_data['Status'], y=p_data['Oxygen'])],
-             'layout': go.Layout(title='Comodities Total Count', plot_bgcolor='pink')
-         }
-
-
-
-
-@app.callback(Output('the_graph','figure'),[Input('my_drop','value')])
-def update_graph(value):
-   #if value=='Red Zone':
-     #   return {
-     #       'data' : [go.Pie(x=p_data[''],labels=p_data[''])]
-      #      'layout' : go.Layout(title="",plot_bgcolor='')
-     #   }
-
-    piechart = px.pie(data_frame=p_data,names=value,hole=0.5)
-    return piechart
-
-
-
-
-
-#@app.callback(Output('bar','figure'),[Input('picker','value')])
-@app.callback(Output('bar','figure'),Input('picker','value'))
-def update_graph(category):
-    if category == 'All':
-        return {'data': [go.Bar(x = p_data['State'],y=p_data['Total'])],
-                'layout': go.Layout(xaxis={'title':'Sate Total Count'},plot_bgcolor='orange')
-                }
-    if category == 'Hospitalized':
-        return {'data': [go.Bar(x=p_data['State'], y=p_data['Hospitalized'])],
-                'layout': go.Layout(xaxis={'title': 'Sate Total Count'}, )
-                }
-    if category == 'Recovered':
-        return {'data': [go.Bar(x=p_data['State'], y=p_data['Recovered'])],
-                'layout': go.Layout(xaxis={'title': 'Sate Total Count'}, )
-                }
-    if category == 'Deceased':
-        return {'data': [go.Bar(x=p_data['State'], y=p_data['Deceased'])],
-                'layout': go.Layout(xaxis={'title': 'Sate Total Count'}, )
-                }
-
-
-if __name__=="__main__":
-    app.run(Debug=True)
+fig3.update_layout(title='State Total Count', xaxis_title="States", plot_bgcolor="orange")
+st.plotly_chart(fig3)
